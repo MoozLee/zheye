@@ -24,7 +24,7 @@ def recg():
 	#img = Image.open(request.files['file'].stream)
 
 	#r = util.Recognizing('./statics/' + fname + '.gif')
-	return str("<h1>第二步, 打开图片</h1><br><a href='http://zheye.shidaixin.com/img/" + fname + ".gif'>click me!</a>")
+	return str("<h1>第二步, 打开图片</h1><br><a href='http://localhost/img/" + fname + ".gif'>click me!</a>")
 	
 
 
