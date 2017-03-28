@@ -39,29 +39,38 @@ def Recognizing(fn):
     #predict UP DOWN
     points = []
     #model = keras.models.load_model('./zheye.keras')
+
+
     for i in range(7):
-        p_x = k_means_cluster_centers[i][0]
-        p_y = k_means_cluster_centers[i][1]
 
-        cr = crop(im, p_x, p_y, radius=22)
-        cr = cr.resize((40, 40), Image.ANTIALIAS)
+        scoring = 0.0
+        for w_i in range(10):
+            for w_j in range(10):
 
-        #X = np.asarray(cr.convert('1'), dtype='float')
-        X = np.asarray(cr.convert('L'), dtype='float')
+                p_x = k_means_cluster_centers[i][0] -5 +w_i
+                p_y = k_means_cluster_centers[i][1] -5 +w_j
 
-        #X = X.ravel()
-        for (x,y), value in np.ndenumerate(X):
-            if value > 200:
-                X[x][y] = 1.0
-            else:
-                X[x][y] = 0.0
+                cr = crop(im, p_x, p_y, radius=20)
+                cr = cr.resize((40, 40), Image.ANTIALIAS)
 
-        x0 = np.expand_dims(X, axis=0)
-        x1 = np.expand_dims(x0, axis=3)
+                #X = np.asarray(cr.convert('1'), dtype='float')
+                X = np.asarray(cr.convert('L'), dtype='float')
 
-        global model
-        m_y = model.predict(x1)
-        if m_y[0][0] < 0.5:
+                #X = X.ravel()
+                for (x,y), value in np.ndenumerate(X):
+                    if value > 200:
+                        X[x][y] = 1.0
+                    else:
+                        X[x][y] = 0.0
+
+                x0 = np.expand_dims(X, axis=0)
+                x1 = np.expand_dims(x0, axis=3)
+
+                global model
+                scoring += model.predict(x1)[0][0]
+
+        scoring = scoring /100
+        if scoring < 0.5:
             #points.append((p_x-20, p_y-20))
             points.append((p_x, p_y))
 
