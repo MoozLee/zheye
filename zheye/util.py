@@ -9,8 +9,10 @@ full_path = os.path.realpath(__file__)
 path, filename = os.path.split(full_path)
 
 from sklearn.cluster import KMeans
+from sklearn.mixture import GaussianMixture
 import keras
-model = keras.models.load_model(path +'/zheye.keras')
+model = keras.models.load_model(path +'/zheyeV3.keras')
+#model = keras.models.load_model(path +'/zheye2.keras')
 '''
 ************************************************************************
 Recognizing...
@@ -21,34 +23,45 @@ def Recognizing(fn):
     
     #get center positions
     vec = img2vec(im).copy()
+    '''
     for i in range(vec.shape[0]):
         for j in range(vec.shape[1]):
             if vec[i][j] >= 249:
                 vec[i][j] = 255
-                
+#            else:
+#                vec[i][j] = -0.5
+    '''
     Y = []
     for i in range(vec.shape[0]):
         for j in range(vec.shape[1]):
             if vec[i][j] <= 200:
                 Y.append([i, j])
-    k_means = KMeans(init='k-means++', n_clusters=7, n_init=10)
+
+
+    """
+    k_means = KMeans(init='k-means++', n_clusters=7, algorithm="full")
     k_means.fit(Y)
     k_means_cluster_centers = np.sort(k_means.cluster_centers_, axis=0)
     
-    
+    """
+    gmm = GaussianMixture(n_components=7, covariance_type='tied', reg_covar=1e2, tol=1e3, n_init=9)
+    gmm.fit(Y)
+    k_means_cluster_centers = np.sort(gmm.means_, axis=0)
+    print(k_means_cluster_centers)
+
+
+
     #predict UP DOWN
     points = []
     #model = keras.models.load_model('./zheye.keras')
 
 
     for i in range(7):
-
         scoring = 0.0
-        for w_i in range(10):
-            for w_j in range(10):
-
-                p_x = k_means_cluster_centers[i][0] -5 +w_i
-                p_y = k_means_cluster_centers[i][1] -5 +w_j
+        for w_i in range(3):
+            for w_j in range(3):
+                p_x = k_means_cluster_centers[i][0] -1 +w_i
+                p_y = k_means_cluster_centers[i][1] -1 +w_j
 
                 cr = crop(im, p_x, p_y, radius=20)
                 cr = cr.resize((40, 40), Image.ANTIALIAS)
@@ -57,25 +70,32 @@ def Recognizing(fn):
                 X = np.asarray(cr.convert('L'), dtype='float')
 
                 #X = X.ravel()
+                '''
                 for (x,y), value in np.ndenumerate(X):
                     if value > 200:
-                        X[x][y] = 1.0
+                        X[x][y] = 0.5
                     else:
-                        X[x][y] = 0.0
+                        X[x][y] = -0.5
+                '''
+                
+                X = (X.astype("float") - 180) /200
 
                 x0 = np.expand_dims(X, axis=0)
                 x1 = np.expand_dims(x0, axis=3)
 
                 global model
-                scoring += model.predict(x1)[0][0]
+                #scoring += model.predict(x1)[0][0]
+                if model.predict(x1)[0][0] < 0.5:
+                    scoring += 1
 
-        scoring = scoring /100
-        if scoring < 0.5:
+        #scoring = scoring /100
+        if scoring > 4:
             #points.append((p_x-20, p_y-20))
-            points.append((p_x, p_y))
+            points.append((k_means_cluster_centers[i][0], k_means_cluster_centers[i][1]))
 
 
-    im = PaintPoint(im, points)
+    im = PaintPoint(im.convert("RGB"), points)
+    im = im.crop((20, 20, 420, 108))
     im.save(fn)
 
 
@@ -87,10 +107,11 @@ def crop(im, y, x, radius = 20):
     return im.crop((x-radius, y-radius, x+radius, y+radius))
 
 def PaintPoint(image, points=[]):
+    print(points)
     im = image.copy()
     bgdr = ImageDraw.Draw(im)
     for y, x in points:
-        bgdr.ellipse((x-10, y-10, x+10, y+10), fill ="blue", outline ='blue')
+        bgdr.ellipse((x-6, y-6, x+6, y+6), fill ="red", outline ='red')
     return im
 
 def Paint2File(contents, fn):

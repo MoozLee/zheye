@@ -16,7 +16,7 @@ def send_js(path):
 @app.route("/rec", methods = ['POST'])
 def recg():
 	f = request.files['file']
-	fname = ''.join(random.choice("weuifhiosdjfisdn89f2023jerio290u") for i in range(5))
+	fname = ''.join(random.choice("weui238uj89fwh9sfhiosdjfisdn89f2023jerio290u") for i in range(5))
 	f.save('./statics/' + fname + '.gif')
 
 	print("@@@", fname)
@@ -24,9 +24,12 @@ def recg():
 	#img = Image.open(request.files['file'].stream)
 
 	#r = util.Recognizing('./statics/' + fname + '.gif')
-	return str("<h1>第二步, 打开图片</h1><br><a href='http://localhost/img/" + fname + ".gif'>click me!</a>")
+	return str("<script>setTimeout(function(){document.getElementById('click').style['display'] = 'inline';}, 900);</script>"+\
+	"<h1>第二步<br>计算中 ... </h1><br>"+\
+	"<div id='click' style='display: none;'><a href='http://zheye.shidaixin.com/img/" + fname + ".gif'><h1>click me!</h1></a><br>"+\
+	"<h1>打开图片,猜对了就给我一颗星吧 <a href='https://github.com/muchrooms/zheye'>github</a></h1></div>")
 	
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
